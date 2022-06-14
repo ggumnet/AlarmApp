@@ -38,6 +38,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
 
         //OREO API 26 이상에서는 채널 필요
+        //notification channel을 등록하는 과정
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
 
             builder.setSmallIcon(R.drawable.ic_launcher_foreground); //mipmap 사용시 Oreo 이상에서 시스템 UI 에러남
@@ -56,7 +57,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             }
         }else builder.setSmallIcon(R.mipmap.ic_launcher); // Oreo 이하에서 mipmap 사용하지 않으면 Couldn't create icon: StatusBarIcon 에러남
 
-
+        //알람이 떴으니 드래그를 하라는 게 뜨도록
         builder.setAutoCancel(true)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setWhen(System.currentTimeMillis())
