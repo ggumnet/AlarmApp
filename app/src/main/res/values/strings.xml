@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">AlarmApp</string>
+    <string name="edit_message">insert message</string>
+    <string name="button_send">send</string>
+</resources>
