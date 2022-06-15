@@ -73,8 +73,6 @@ public class AlarmReceiver extends BroadcastReceiver {
         alarmIntent.setClass(context, RepeatAlarmActivity.class);
         alarmIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        alarmIntent.putExtra("thread", intent.getSerializableExtra("thread"));
-
         // 액티비티를 띄운다
         this.context.startActivity(alarmIntent);
 

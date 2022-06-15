@@ -191,6 +191,8 @@ public class BluetoothSet extends AppCompatActivity {
                 textStatus.setText("connected to "+name);
 
                 //TODO: 얘를 RepeatAlarmActivity에 전달해야한다.
+
+                setGlobalSocket(btSocket);
                 connectedThread = new ConnectedThread(btSocket);
                 connectedThread.start();
             }
@@ -220,6 +222,9 @@ public class BluetoothSet extends AppCompatActivity {
             e.printStackTrace();
         }
         return null;
+    }
+    public void setGlobalSocket(BluetoothSocket bluetoothSocket){
+        ((MyApplication) this.getApplication()).setBluetoothSocket(bluetoothSocket);
     }
 
     public class ThreadObject implements Serializable {
