@@ -112,8 +112,6 @@ public class AlarmSetActivity extends AppCompatActivity {
 
         });
     }
-
-
     void diaryNotification(Calendar calendar)
     {
         Boolean dailyNotify = true; // 무조건 알람을 사용
@@ -121,6 +119,7 @@ public class AlarmSetActivity extends AppCompatActivity {
         PackageManager pm = this.getPackageManager();
         ComponentName receiver = new ComponentName(this, DeviceBootReceiver.class);
         Intent alarmIntent = new Intent(this, AlarmReceiver.class);
+        //alarmIntent.putExtra("thread", getIntent().getSerializableExtra("thread"));
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent, 0);
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
@@ -143,8 +142,6 @@ public class AlarmSetActivity extends AppCompatActivity {
             pm.setComponentEnabledSetting(receiver,
                     PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                     PackageManager.DONT_KILL_APP);
-
         }
     }
-
 }

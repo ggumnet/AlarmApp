@@ -51,10 +51,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void runAlarmSet(View view){
-        Intent intent = new Intent(this, AlarmSetActivity.class);
-        startActivity(intent);
-    }
     public void runAlarmAnalysis(View view){
         Intent intent = new Intent(this, AlarmAnalysisActivity.class);
         startActivity(intent);

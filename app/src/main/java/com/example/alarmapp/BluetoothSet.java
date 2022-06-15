@@ -2,6 +2,14 @@ package com.example.alarmapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Bundle;
+
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -20,18 +28,23 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
+
+
+
 public class BluetoothSet extends AppCompatActivity {
+    public static final String EXTRA_MESSAGE = "";
     String TAG = "MainActivity";
     UUID BT_MODULE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // "random" unique identifier
 
     TextView textStatus;
     Button btnParied, btnSearch, btnSend;
-    ListView listView;
+    ListView listView;  // listview는 pairing된 기기들을 세로로 정렬
 
     BluetoothAdapter btAdapter;
     Set<BluetoothDevice> pairedDevices;
@@ -140,42 +153,60 @@ public class BluetoothSet extends AppCompatActivity {
         unregisterReceiver(receiver);
     }
 
-public class myOnItemClickListener implements AdapterView.OnItemClickListener {
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Toast.makeText(getApplicationContext(), btArrayAdapter.getItem(position), Toast.LENGTH_SHORT).show();
+    //클릭했을 때 실행 되는 listener
+    public class myOnItemClickListener implements AdapterView.OnItemClickListener {
 
-        textStatus.setText("try...");
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            Toast.makeText(getApplicationContext(), btArrayAdapter.getItem(position), Toast.LENGTH_SHORT).show();
 
-        final String name = btArrayAdapter.getItem(position); // get name
-        final String address = deviceAddressArray.get(position); // get address
-        boolean flag = true;
+            textStatus.setText("연결중");
 
-        BluetoothDevice device = btAdapter.getRemoteDevice(address);
+            final String name = btArrayAdapter.getItem(position); // get name
+            final String address = deviceAddressArray.get(position); // get address
+            boolean flag = true;
 
-        // create & connect socket
-        try {
-            btSocket = createBluetoothSocket(device);
-            btSocket.connect();
-        } catch (IOException e) {
-            flag = false;
-            textStatus.setText("connection failed!");
-            e.printStackTrace();
-        } catch(SecurityException e){
-            e.printStackTrace();
+            BluetoothDevice device = btAdapter.getRemoteDevice(address);
+
+            //device 까지는 얻어짐.
+
+            // create & connect socket
+            try {
+                //btSocket = createBluetoothSocket(device);
+                btSocket =(BluetoothSocket) device.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(device,1);
+                btSocket.connect();  //btSocket의 mPort가 -1인 문제.
+            } catch (IOException e) {
+                flag = false;
+                textStatus.setText("connection failed!");
+                e.printStackTrace();
+            } catch(SecurityException e){
+                e.printStackTrace();
+            } catch(Exception e){
+                e.printStackTrace();
+            }
+
+            // start bluetooth communication
+            if(flag){
+                textStatus.setText("connected to "+name);
+
+                //TODO: 얘를 RepeatAlarmActivity에 전달해야한다.
+                connectedThread = new ConnectedThread(btSocket);
+                connectedThread.start();
+            }
+
+            ThreadObject threadObject = new ThreadObject("alarm", "1111", "test" , connectedThread);
+            Intent intent = new Intent(getApplicationContext(), AlarmSetActivity.class);
+            //intent.putExtra("thread", threadObject); //intent 사이에 값을 key-value로 전달
+            try {
+                startActivity(intent);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
         }
-
-        // start bluetooth communication
-        if(flag){
-            textStatus.setText("connected to "+name);
-            connectedThread = new ConnectedThread(btSocket);
-            connectedThread.start();
-        }
-
     }
-}
 
+    //처음에 여기서 connection 오류 발생
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
         try {
             final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", UUID.class);
@@ -189,5 +220,22 @@ public class myOnItemClickListener implements AdapterView.OnItemClickListener {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public class ThreadObject implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private String name;
+        private String id;
+        private String dev;
+        private ConnectedThread connectedThread;
+        public ThreadObject(String name, String id, String dev, ConnectedThread connectedThread) {
+            this.name = name;
+            this.id = id;
+            this.dev = dev;
+            this.connectedThread = connectedThread;
+        }
+        public ConnectedThread getConnectedThread(){
+            return connectedThread;
+        }
     }
 }

@@ -7,7 +7,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
+import android.os.PowerManager;
 import android.widget.Toast;
+import android.net.ConnectivityManager;
 
 import androidx.core.app.NotificationCompat;
 
@@ -18,60 +21,75 @@ import java.util.Locale;
 
 
 import static android.content.Context.MODE_PRIVATE;
+import static android.content.Context.WIFI_SERVICE;
 
+
+//alarm 신호를 receive해서 RepeatAlarmActivity를 실행 시킴.
 public class AlarmReceiver extends BroadcastReceiver {
+
+    Context context;
+
+    private static PowerManager.WakeLock sCpuWakeLock;
+    private static WifiManager.WifiLock sWifiLock;
+    private static ConnectivityManager manager;
+
     @Override
     public void onReceive(Context context, Intent intent) { //onReceive: 방송 수신되면 자동 호출되는 함수. context: 어플리케이션 context
 
-        //getSystemService: 시스템에서 제공하는 기능을 제공하는 객체를 부를 때 사용.
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);//Notificatino_service: 백그라운드 이벤트를 알려줌
-        Intent notificationIntent = new Intent(context, MainActivity.class);
+        if (sCpuWakeLock != null) {
+            return;
+        }
 
-        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
-                | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        if (sWifiLock != null) {
+            return;
+        }
 
-        PendingIntent pendingI = PendingIntent.getActivity(context, 0,
-                notificationIntent, 0);
+        // 절전모드로 와이파이 꺼지는것을 방지
+        WifiManager wifiManager = (WifiManager)context.getSystemService(WIFI_SERVICE);
+        sWifiLock = wifiManager.createWifiLock("wifilock");
+        sWifiLock.setReferenceCounted(true);
+        sWifiLock.acquire();
+
+        // 시스템에서 powermanager 받아옴
+        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+
+        // 객체의 제어레벨 설정
+        sCpuWakeLock = pm.newWakeLock(
+                PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
+                        PowerManager.ACQUIRE_CAUSES_WAKEUP |
+                        PowerManager.ON_AFTER_RELEASE, "app:alarm");
+
+        //acquire 함수를 실행하여 앱을 깨운다. cpu 를 획득한다
+        sCpuWakeLock.acquire();
 
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "default");
+        manager = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        this.context = context;
+
+        // 작동할 액티비티를 설정한다
+        Intent alarmIntent = new Intent("android.intent.action.sec");
+
+        alarmIntent.setClass(context, RepeatAlarmActivity.class);
+        alarmIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        alarmIntent.putExtra("thread", intent.getSerializableExtra("thread"));
+
+        // 액티비티를 띄운다
+        this.context.startActivity(alarmIntent);
 
 
-        //OREO API 26 이상에서는 채널 필요
-        //notification channel을 등록하는 과정
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        // acquire 함수를 사용하였으면 꼭 release 를 해주어야 한다.
+        // cpu를 점유하게 되어 배터리 소모나 메모리 소모에 영향을 미칠 수 있다
+        if(sWifiLock != null) {
+            sWifiLock.release();
+            sWifiLock = null;
+        }
 
-            builder.setSmallIcon(R.drawable.ic_launcher_foreground); //mipmap 사용시 Oreo 이상에서 시스템 UI 에러남
-
-
-            String channelName ="매일 알람 채널";
-            String description = "매일 정해진 시간에 알람합니다.";
-            int importance = NotificationManager.IMPORTANCE_HIGH; //소리와 알림메시지를 같이 보여줌
-
-            NotificationChannel channel = new NotificationChannel("default", channelName, importance);
-            channel.setDescription(description);
-
-            if (notificationManager != null) {
-                // 노티피케이션 채널을 시스템에 등록
-                notificationManager.createNotificationChannel(channel);
-            }
-        }else builder.setSmallIcon(R.mipmap.ic_launcher); // Oreo 이하에서 mipmap 사용하지 않으면 Couldn't create icon: StatusBarIcon 에러남
-
-        //알람이 떴으니 드래그를 하라는 게 뜨도록
-        builder.setAutoCancel(true)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
-                .setWhen(System.currentTimeMillis())
-
-                .setTicker("{Time to watch some cool stuff!}")
-                .setContentTitle("상태바 드래그시 보이는 타이틀")
-                .setContentText("상태바 드래그시 보이는 서브타이틀")
-                .setContentInfo("INFO")
-                .setContentIntent(pendingI);
-
-        if (notificationManager != null) {
-
-            // 노티피케이션 동작시킴
-            notificationManager.notify(1234, builder.build());
+        if (sCpuWakeLock != null) {
+            sCpuWakeLock.release();
+            sCpuWakeLock = null;
+        }
 
             Calendar nextNotifyTime = Calendar.getInstance();
 
@@ -86,6 +104,5 @@ public class AlarmReceiver extends BroadcastReceiver {
             Date currentDateTime = nextNotifyTime.getTime();
             String date_text = new SimpleDateFormat("yyyy/MM/dd/EE a hh:mm ", Locale.getDefault()).format(currentDateTime);
             Toast.makeText(context.getApplicationContext(),"Next alarm is " + date_text + "!", Toast.LENGTH_SHORT).show();
-        }
     }
 }
