@@ -41,9 +41,6 @@
             android:name=".AlarmReceiver"
             android:enabled="true"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.sec" />
-            </intent-filter>
         </receiver>
 
         <activity
