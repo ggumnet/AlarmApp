@@ -28,8 +28,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
@@ -197,6 +199,8 @@ public class BluetoothSet extends AppCompatActivity {
                 connectedThread.start();
             }
 
+            test();
+
             ThreadObject threadObject = new ThreadObject("alarm", "1111", "test" , connectedThread);
             Intent intent = new Intent(getApplicationContext(), AlarmSetActivity.class);
             //intent.putExtra("thread", threadObject); //intent 사이에 값을 key-value로 전달
@@ -205,6 +209,24 @@ public class BluetoothSet extends AppCompatActivity {
             }catch(Exception e){
                 e.printStackTrace();
             }
+        }
+    }
+    public void test(){
+        BluetoothSocket bluetoothSocket = ((MyApplication) this.getApplication()).getBluetoothSocket();
+
+        OutputStream tmpOut = null, mmOutStream;
+        try {
+            tmpOut = bluetoothSocket.getOutputStream();
+        } catch (IOException e) {
+        }
+
+        mmOutStream = tmpOut;
+        try {
+            for(int i = 0; i<1000; i++) {
+                mmOutStream.write("start".getBytes());
+            }
+        } catch (IOException e) {
+            mmOutStream = null;
         }
     }
 

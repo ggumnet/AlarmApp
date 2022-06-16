@@ -22,6 +22,8 @@ import java.util.Locale;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.content.Context.WIFI_SERVICE;
+import static android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK;
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 
 //alarm 신호를 receive해서 RepeatAlarmActivity를 실행 시킴.
@@ -68,13 +70,16 @@ public class AlarmReceiver extends BroadcastReceiver {
         this.context = context;
 
         // 작동할 액티비티를 설정한다
-        Intent alarmIntent = new Intent("android.intent.action.sec");
+        //Intent alarmIntent = new Intent("android.intent.action.sec");
 
-        alarmIntent.setClass(context, RepeatAlarmActivity.class);
-        alarmIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        // 액티비티를 띄운다
-        this.context.startActivity(alarmIntent);
+        /*
+        Intent i = new Intent();
+        i.setClassName("com.example.alarmapp", "com.example.alarmapp.RepeatAlarmActivity");
+        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        context.startActivity(i.addFlags(FLAG_ACTIVITY_NEW_TASK|FLAG_ACTIVITY_MULTIPLE_TASK));
+
+         */
 
 
         // acquire 함수를 사용하였으면 꼭 release 를 해주어야 한다.
@@ -89,18 +94,18 @@ public class AlarmReceiver extends BroadcastReceiver {
             sCpuWakeLock = null;
         }
 
-            Calendar nextNotifyTime = Calendar.getInstance();
+        Calendar nextNotifyTime = Calendar.getInstance();
 
-            // 내일 같은 시간으로 알람시간 결정
-            nextNotifyTime.add(Calendar.DATE, 1);
+        // 내일 같은 시간으로 알람시간 결정
+        nextNotifyTime.add(Calendar.DATE, 1);
 
-            //  Preference에 설정한 값 저장
-            SharedPreferences.Editor editor = context.getSharedPreferences("daily alarm", MODE_PRIVATE).edit();
-            editor.putLong("nextNotifyTime", nextNotifyTime.getTimeInMillis());
-            editor.apply();
+        //  Preference에 설정한 값 저장
+        SharedPreferences.Editor editor = context.getSharedPreferences("daily alarm", MODE_PRIVATE).edit();
+        editor.putLong("nextNotifyTime", nextNotifyTime.getTimeInMillis());
+        editor.apply();
 
-            Date currentDateTime = nextNotifyTime.getTime();
-            String date_text = new SimpleDateFormat("yyyy/MM/dd/EE a hh:mm ", Locale.getDefault()).format(currentDateTime);
-            Toast.makeText(context.getApplicationContext(),"Next alarm is " + date_text + "!", Toast.LENGTH_SHORT).show();
+        Date currentDateTime = nextNotifyTime.getTime();
+        String date_text = new SimpleDateFormat("yyyy/MM/dd/EE a hh:mm ", Locale.getDefault()).format(currentDateTime);
+        Toast.makeText(context.getApplicationContext(),"Next alarm is " + date_text + "!", Toast.LENGTH_SHORT).show();
     }
 }

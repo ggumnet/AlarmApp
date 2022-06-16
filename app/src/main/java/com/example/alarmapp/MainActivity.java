@@ -52,7 +52,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void runAlarmAnalysis(View view){
-        Intent intent = new Intent(this, AlarmAnalysisActivity.class);
+        Intent intent = new Intent(this, AlarmSetActivity.class);
+        //Intent intent = new Intent(this, AlarmAnalysisActivity.class);
         startActivity(intent);
     }
     public void runBluetoothSet(View view){
